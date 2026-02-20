@@ -1,0 +1,53 @@
+# Example configuration for Stalwart E2E Mail Monitor
+# Copy to config.yml and fill in credentials (do not commit secrets)
+
+defaults:
+  smtp:
+    port: 465
+    security: ssl   # ssl | starttls | none
+    timeout: 30
+  imap:
+    port: 993
+    security: ssl   # ssl | starttls | none
+    mailbox: INBOX
+    timeout: 30
+  poll:
+    timeout_seconds: 120
+    interval_seconds: 5
+  delete_on_success: true
+
+accounts:
+  - name: primary
+    smtp:
+      host: smtp.example.com
+      username: alice@example.com
+      password: "CHANGE_ME"   # will be redacted in logs
+      from: alice@example.com
+      to:   alice@example.com
+    imap:
+      host: imap.example.com
+      username: alice@example.com
+      password: "CHANGE_ME"
+      mailbox: INBOX
+    uptime_kuma:
+      push_url: "https://kuma.example.net/api/push/REPLACE_TOKEN?status=up&msg=init"
+
+  - name: secondary
+    smtp:
+      host: smtp2.example.com
+      username: bob@example.com
+      password: "CHANGE_ME"
+      from: bob@example.com
+      to:   bob@example.com
+      security: starttls  # override defaults per account if needed
+      port: 587
+    imap:
+      host: imap2.example.com
+      username: bob@example.com
+      password: "CHANGE_ME"
+      mailbox: INBOX
+    poll:
+      timeout_seconds: 180
+      interval_seconds: 10
+    uptime_kuma:
+      push_url: "https://kuma.example.net/api/push/REPLACE_TOKEN"
