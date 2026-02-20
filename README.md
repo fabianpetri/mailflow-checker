@@ -17,17 +17,17 @@ An end-to-end monitoring tool that sends a test email via SMTP and verifies deli
 - Python 3
 
 ### Install (Proxmox VE community-scripts style)
-You can install with a single command (replace OWNER/REPO/BRANCH accordingly or set E2E_REPO_URL):
+You can install with a single command:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/fabianpetri/mailflow-checker/main/scripts/install_e2e_mail_monitor.sh)" -- install
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/fabianpetri/mailflow-checker/main/scripts/install_mailflow_checker.sh)" -- install
 ```
 
 Or explicitly pass your repo URL/branch:
 
 ```bash
-E2E_REPO_URL="https://github.com/fabianpetri/mailflow-checker.git" E2E_BRANCH="main" \
-  bash -c "$(curl -fsSL https://raw.githubusercontent.com/fabianpetri/mailflow-checker/main/scripts/install_e2e_mail_monitor.sh)" -- install
+MAILFLOW_REPO_URL="https://github.com/fabianpetri/mailflow-checker.git" MAILFLOW_BRANCH="main" \
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/fabianpetri/mailflow-checker/main/scripts/install_mailflow_checker.sh)" -- install
 ```
 
 This will:
@@ -97,7 +97,7 @@ Notes:
 - Logs redact passwords. Avoid placing secrets in command-line arguments or environment variables.
 
 ## Running via systemd
-- Timer: `mailflow-checker.timer` (defaults to every 5 minutes; override with `E2E_INTERVAL` during install)
+- Timer: `mailflow-checker.timer` (defaults to every 5 minutes; override with `MAILFLOW_INTERVAL` during install)
 - Service (oneshot): `mailflow-checker.service`
 
 Useful commands:
