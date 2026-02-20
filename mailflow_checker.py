@@ -264,6 +264,29 @@ def push_kuma(url: str, status: str, msg: Optional[str] = None, ping_ms: Optiona
         logging.error("Failed to push status to Uptime Kuma: %s", e)
 
 
+def test_kuma_push(url: str) -> bool:
+    """Send a lightweight test heartbeat to verify a Uptime Kuma Push token works.
+
+    Returns True on HTTP 2xx, False otherwise. Logs response details.
+    """
+    try:
+        r = requests.get(url, params={"status": "up", "msg": "token test", "ping": "0"}, timeout=10)
+        ok = 200 <= r.status_code < 300
+        body = None
+        try:
+            body = r.json()
+        except Exception:
+            body = r.text[:300]
+        if ok:
+            logging.info("Kuma token OK: %s (status=%s, body=%s)", url, r.status_code, body)
+        else:
+            logging.error("Kuma token FAILED: %s (status=%s, body=%s)", url, r.status_code, body)
+        return ok
+    except Exception as e:
+        logging.error("Kuma token request error for %s: %s", url, e)
+        return False
+
+
 def run_for_account(acct: AccountConfig) -> Tuple[bool, str, Optional[float]]:
     # Basic field validation to avoid SMTP/IMAP errors with None values
     for field_name, val in [
@@ -329,6 +352,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--config", "-c", default="config.yml", help="Path to YAML config (default: config.yml)")
     p.add_argument("--account", "-a", action="append", help="Run only for the given account name (repeatable)")
     p.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    p.add_argument("--test-kuma", action="store_true", help="Only test the configured Uptime Kuma push token(s) and exit")
     args = p.parse_args(argv)
 
     setup_logging(args.verbose)
@@ -338,6 +362,23 @@ def main(argv: Optional[List[str]] = None) -> int:
     except Exception as e:
         logging.error("Config error: %s", e)
         return 2
+
+    # If only testing Kuma tokens, do that and exit
+    if args.test_kuma:
+        any_urls = False
+        overall = True
+        for acct in accounts:
+            if acct.kuma.push_url:
+                any_urls = True
+                logging.info("Testing Uptime Kuma push token for account: %s", acct.name)
+                ok = test_kuma_push(acct.kuma.push_url)
+                overall = overall and ok
+            else:
+                logging.warning("Account %s has no uptime_kuma.push_url configured", acct.name)
+        if not any_urls:
+            logging.error("No uptime_kuma.push_url configured in any selected account")
+            return 2
+        return 0 if overall else 1
 
     overall_ok = True
     for acct in accounts:

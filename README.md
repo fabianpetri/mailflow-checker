@@ -160,7 +160,7 @@ accounts:
       password: "CHANGE_ME"
       mailbox: INBOX
     uptime_kuma:
-      push_url: "https://kuma.example.net/api/push/REPLACE_TOKEN?status=up&msg=init"
+      push_url: "https://kuma.example.net/api/push/REPLACE_TOKEN"
 ```
 
 Notes:
@@ -193,6 +193,45 @@ python mailflow_checker.py --config config.yml
 - Passwords are never printed to logs
 - Config file permissions are set to 600
 - Service runs as a dedicated system user with restricted permissions
+
+## Configuring Uptime Kuma
+
+- In Uptime Kuma, create a new monitor of type "Push" for each account you want to track.
+- Copy the Push URL (it looks like https://<kuma-host>/api/push/<token> ).
+- Put this value into your account config as uptime_kuma.push_url. Use the base token URL (no query parameters). Example:
+
+```yaml
+accounts:
+  - name: primary
+    # ... smtp/imap ...
+    uptime_kuma:
+      push_url: "https://kuma.example.net/api/push/<TOKEN>"
+```
+
+- Heartbeat Interval: Set slightly above your systemd timer (e.g., timer 5m -> interval 6–7m) to avoid false alerts.
+- Heartbeat Retries: 0–1 for fast alerts, 2 if you want more noise damping.
+- The script sends: status=up|down, msg (short reason or OK), and ping (milliseconds for SMTP phase).
+- Avoid using additional keepalive scripts against the same monitor—those can mask real failures.
+
+### Test your Push token quickly
+
+You can test your configured Push URL(s) without sending mail:
+
+```bash
+# Test all accounts' tokens in the config
+python mailflow_checker.py --config /etc/mailflow-checker/config.yml --test-kuma
+
+# Test only a specific account's token
+python mailflow_checker.py --config /etc/mailflow-checker/config.yml --account primary --test-kuma
+```
+
+A successful test logs something like:
+
+```
+INFO Kuma token OK: https://kuma.../api/push/<TOKEN> (status=200, body={"ok":true,...})
+```
+
+If it fails, you'll see an error with status/body details to help diagnose (token invalid, Kuma offline, network/firewall, etc.).
 
 ## Troubleshooting
 - Verify connectivity to SMTP/IMAP hosts and ports (firewall/ACL/SSL settings)

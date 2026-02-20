@@ -30,7 +30,7 @@ accounts:
       password: "CHANGE_ME"
       mailbox: INBOX
     uptime_kuma:
-      push_url: "https://kuma.example.net/api/push/REPLACE_TOKEN?status=up&msg=init"
+      push_url: "https://kuma.example.net/api/push/REPLACE_TOKEN"
 
   - name: secondary
     smtp:
